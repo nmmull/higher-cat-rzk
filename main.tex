@@ -1,0 +1,92 @@
+\documentclass[10pt]{report}
+
+% Palatino
+\usepackage{mathpazo}
+
+% larger line spacing
+\usepackage{setspace}\setstretch{1.15}
+
+% larger margins
+\usepackage[margin=1in]{geometry}
+
+% better quotations
+\usepackage{csquotes}
+
+% todo notes
+\usepackage{todonotes}\setuptodonotes{inline}
+
+% better bullets
+\usepackage{enumitem}
+\renewcommand{\labelitemi}{$\triangleright$}
+
+% general math
+\usepackage{amsthm, amsmath, amssymb, mathtools}
+\usepackage{thmtools, thm-restate}
+
+% better links
+\usepackage{hyperref}
+\usepackage{cleveref}
+
+% no chapter number heading
+\usepackage{titlesec}
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries}{}{0pt}{\Huge}
+
+\title{
+  Higher Category Theory via Rzk
+}
+\author{Directed Study}
+\date{Fall 2026}
+
+\begin{document}
+
+\maketitle
+%% \tableofcontents
+
+\abstract{
+  This is a document for organizing ideas and material for a directed study on higher category theory using the Rzk proof assistant \cite{rzk}.
+  The primary goal of this direct study (for me) is to understand to what extend the study of higher category theory at an introductory level can be made simpler or more interesting by using a proof assistant designed for higher category theory.
+  Figure \ref{fig:schedule} has a rough schedule for the semester.
+  \begin{figure}
+    \begin{tabular}{|c|l|}
+      \hline
+      Week & Topic \\
+      \hline
+      1 & None \\
+      2 & None \\
+      3 & Getting comfortable with Rzk \\
+      4 & TBD \\
+      5 & TBD \\
+      6 & TBD \\
+      7 & TBD \\
+      8 & TBD \\
+      9 & TBD \\
+      10 & TBD \\
+      11 & TBD \\
+      12 & TBD \\
+      13 & TBD \\
+      14 & TBD \\
+      15 & TBD \\
+      \hline
+    \end{tabular}
+    \centering
+    \caption{An outline of the topics covered during the semester}
+    \label{fig:schedule}
+  \end{figure}
+}
+
+\chapter{Notes}
+
+\section*{Week 2}
+
+I installed Rzk on my machine.
+There were some issues with building via \texttt{cabal} having to do with the \texttt{lsp-types} package, so I gave up and installed the binary from Github.
+I played around very breifly with Rzk.
+The features relating to dependent types are at this point standard.
+I haven't dealt with cubes or topes yet.
+
+\nocite{*}
+\bibliographystyle{plain}
+\bibliography{refs}
+
+\end{document}

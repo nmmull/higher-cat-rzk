@@ -88,6 +88,33 @@ I played around very breifly with it, the features related to dependent types se
 
 \section{Introduction to homotopy type theory}
 
+\begin{itemize}
+\item
+  This week we're keeping it simple (at least on paper).
+  We're looking at synthetic homotopy theory in Rzk.
+  This is covered in the \enquote{Day 2} section.
+\item
+  \enquote{\dots Kan complexes present the \enquote{standard model} of HoTT: a type is a Kan complex, a.k.a.\ $\infty$-groupoid, a.k.a.\ a topological space up to homotopy.}
+  According to nLab \cite{nlab-kan-complex}, \enquote{a \textit{Kan complex} is an abstraction of the combinatorial structure found in the nerve of a groupoid.}
+  I don't know what this means, and clicking around nLab didn't help.
+  Hopefully they'll make it more clear in these notes.
+\item
+  It took me a moment to realize why we call a proof pointwise equality a homotopy.
+  A homotopy from $f : X \to Y$ to $g : X \to Y$ is typically defined as a continuous function $h : X \times [0, 1] \to Y$ such that $h(\cdot, 0) = f$ and $h(\cdot, 1) = g$.
+  For any $x \in X$, the function $h(x, \cdot) : [0, 1] \to Y$ is a path from $f(x)$ to $g(x)$.
+  In the Curry-Howard-Voevodsky correspondense, paths are equality types.
+  The \enquote{Curried} version of $h$ is something that maps $x : X$ to paths (equalities) between $f(x)$ and $g(x)$ (seems obvious in retrospect).
+\item
+  There is a typo (as of 2026-09-21) in the definition of $\textsf{is-equiv}_{A, B}(f)$.
+  It should read:
+  \begin{displaymath}
+    \left(\sum_{r^{B \to A}}r \circ f \sim i_A \right) \times \left(\sum_{s^{B \to A}} (f \circ s \sim i_B)\right)
+  \end{displaymath}
+\end{itemize}
+
+
+
+
 \nocite{*}
 \bibliographystyle{plain}
 \bibliography{refs}

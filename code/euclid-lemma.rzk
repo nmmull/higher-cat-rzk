@@ -1,0 +1,136 @@
+#lang rzk-1
+
+#def and (A : U) (B : U) : U := Sigma (_ : A) , B
+
+#data or (A : U) (B : U) : U :=
+  left (a : A) : or A B
+  | right (b : B) : or A B
+
+#def cong
+  (A B : U)
+  (x y : A)
+  (f : A -> B)
+  (eq : x = y)
+  : (f x = f y)
+  := idJ(A, x, \z _ -> f x = f z, refl, y, eq)
+
+#def sym
+  (A : U)
+  (x y : A)
+  (x-equals-y : x = y)
+  : y = x
+  := idJ(A, x, \z _ -> z = x, refl, y, x-equals-y)
+
+#def trans
+  (A : U)
+  (x y z : A)
+  (x-equals-y : x = y)
+  (y-equals-z : y = z)
+  : x = z
+  := idJ(A, y, \q _ -> x = q, x-equals-y, z, y-equals-z)
+
+#data nat := zero | succ (n : nat)
+
+#def add (m : nat) (n : nat) : nat :=
+  match m
+  ( zero => n
+  | succ k k-add-n => succ k-add-n
+  )
+
+#def mul (m : nat) (n : nat) : nat :=
+  match m
+  ( zero => zero
+  | succ k k-mul-n => add n k-mul-n
+  )
+
+#def lte (m : nat) (n : nat) : U :=
+  match n
+  ( zero => m = zero
+  | succ k m-lte-k-ty => or (m = succ k) m-lte-k-ty
+  )
+
+#def succ-eq
+  (m : nat)
+  (n : nat)
+  : (m = n) -> (succ m = succ n)
+  := cong nat nat m n (\k -> succ k)
+
+#def succ-lte
+  (m : nat)
+  (n : nat)
+  : lte m n -> lte (succ m) (succ n)
+  :=
+  match n
+  ( zero =>
+    \m-eq-zero ->
+      left
+        (succ m = succ zero)
+        (lte (succ m) zero)
+        (succ-eq m zero m-eq-zero)
+  | succ k m-lte-k-implies-sm-lte-mk =>
+    \m-lte-sk ->
+      match m-lte-sk
+      ( left m-eq-sk =>
+        left
+          (succ m = (succ (succ k)))
+          (lte (succ m) (succ k))
+          (succ-eq m (succ k) m-eq-sk)
+      | right m-lte-k =>
+        right
+          (succ m = (succ (succ k)))
+          (lte (succ m) (succ k))
+          (m-lte-k-implies-sm-lte-mk m-lte-k)
+      )
+  )
+
+#def zero-lte-n
+  (n : nat)
+  : lte zero n
+  :=
+  match n
+  ( zero => refl
+  | succ k zero-lte-k =>
+    right
+      (zero = succ k)
+      (lte zero k)
+      zero-lte-k
+  )
+
+#def euclids-lemma
+  (m : nat)
+  (l : nat)
+  : Sigma (j : nat) , Sigma (k : nat) , and (add j (mul k (succ m)) = l) (lte j m)
+  :=
+  match l
+  ( zero => (zero, (zero, (refl, zero-lte-n m)))
+  | succ n (j, (k, (j-plus-k-times-succ-m-equals-n, j-lte-m))) =>
+    match (succ-lte j m j-lte-m)
+    ( left succ-j-equals-succ-m =>
+      let succ-m-equals-succ-j := sym nat (succ j) (succ m) succ-j-equals-succ-m in
+      let eq :=
+        trans
+          nat
+          (add (succ m) (mul k (succ m)))
+          (add (succ j) (mul k (succ m)))
+          (succ n)
+          (cong
+            nat
+            nat
+            (succ m)
+            (succ j)
+            (\z -> add z (mul k (succ m)))
+            succ-m-equals-succ-j)
+          (succ-eq
+            (add j (mul k (succ m)))
+            n
+            j-plus-k-times-succ-m-equals-n)
+      in (zero, (succ k, (eq, zero-lte-n m)))
+    | right succ-j-lte-m =>
+      let eq :=
+        succ-eq
+          (add j (mul k (succ m)))
+          n
+          j-plus-k-times-succ-m-equals-n
+      in (succ j, (k, (eq, succ-j-lte-m)))
+    )
+  )

@@ -1,0 +1,48 @@
+#lang rzk-1
+
+#def prod
+  (A B : U)
+  : U
+  :=
+  Σ (_ : A) , B
+
+#def homotopy
+  (A B : U)
+  (f g : A → B)
+  : U
+  :=
+  (x : A) → f x = g x
+
+#def is-equiv
+  (A B : U)
+  (f : A → B)
+  : U
+  :=
+  prod
+    (Σ (r : B → A) , homotopy A A (\a → r (f a)) (\a → a))
+    (Σ (s : B → A) , homotopy B B (\b → f (s b)) (\b → b))
+
+#def Equiv
+  (A B : U)
+  : U
+  :=
+  Σ (f : A → B) , is-equiv A B f
+
+#def refl-Equiv
+  (A : U)
+  : Equiv A A
+  :=
+  ( \a → a
+  , ( ( \a → a , \x → refl )
+    , ( \a → a , \x → refl )
+    )
+  )
+
+#def sym-Equiv
+  (A B : U)
+  : Equiv A B → Equiv B A
+  :=
+  \A≅B →
+    let f := π₁ A≅B in
+    let h := π₂ A≅B in
+    ?

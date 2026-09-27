@@ -1,0 +1,308 @@
+#lang rzk-1
+
+#def symm
+  (A : U)
+  (x y : A)
+  (x=y : x = y)
+  : y = x
+  := idJ(A, x, \z _ -> z = x, refl, y, x=y)
+
+#def trans
+  (A : U)
+  (x y z : A)
+  (x=y : x = y)
+  (y=z : y = z)
+  : x = z
+  := idJ(A, y, \w _ -> x = w, x=y, z, y=z)
+
+#def lu
+  (A : U)
+  (x y : A)
+  (x=y : x = y)
+  : x=y = trans A x x y refl x=y
+  := idJ(A, x, \z p -> p = trans A x x z refl p, refl, y, x=y)
+
+#def ru
+  (A : U)
+  (x y : A)
+  (x=y : x = y)
+  : x=y = trans A x y y x=y refl
+  := idJ(A, x, \z p -> p = trans A x z z p refl, refl, y, x=y)
+
+#def symm-symm
+  (A : U)
+  (x y : A)
+  (p : x = y)
+  : symm A y x (symm A x y p) = p
+  :=
+  idJ
+    ( A
+    , x
+    , \z q -> symm A z x (symm A x z q) = q
+    , refl
+    , y
+    , p
+    )
+
+
+#def idJ-2
+  (A : U)
+  (b : A)
+  (D : (x : A) -> (p : x = b) -> U)
+  (d : D b refl)
+  (x : A)
+  (p : x = b)
+  : D x p
+  :=
+  let d-symm-symm : D x (symm A b x (symm A x b p)) :=
+    idJ
+      ( A
+      , b
+      , \z q -> D z (symm A b z q)
+      , d
+      , x
+      , symm A x b p
+      )
+  in
+  idJ
+    ( x = b
+    , symm A b x (symm A x b p)
+    , \q _ -> D x q
+    , d-symm-symm
+    , p
+    , symm-symm A x b p
+    )
+
+#def loop-space
+  (A : U)
+  (a : A)
+  : U
+  := a = a
+
+#def loop-space-2
+  (A : U)
+  (a : A)
+  : U
+  := refl =_{a = a} refl
+
+#def whisker-r-refl
+ (A : U)
+ (a b : A)
+ (p q : a = b)
+ (alpha : p = q)
+ : trans A a b b p refl = trans A a b b q refl
+ :=
+   trans
+     (a = b)
+     (trans A a b b p refl)
+     p
+     (trans A a b b q refl)
+     (symm
+        (a = b)
+        p
+        (trans A a b b p refl)
+        (ru A a b p))
+     (trans
+       (a = b)
+       p
+       q
+       (trans A a b b q refl)
+       alpha
+       (ru A a b q))
+
+#def whisker-r
+  (A : U)
+  (a b c : A)
+  (p q : a = b)
+  (alpha : p = q)
+  (r : b = c)
+  : trans A a b c p r = trans A a b c q r
+  :=
+  idJ
+    ( A
+    , b
+    , \z t -> trans A a b z p t = trans A a b z q t
+    , whisker-r-refl A a b p q alpha
+    , c
+    , r
+    )
+
+#def whisker-l-refl
+  (A : U)
+  (b c : A)
+  (r s : b = c)
+  (beta : r = s)
+  : trans A b b c refl r = trans A b b c refl s
+  :=
+  trans
+    (b = c)
+    (trans A b b c refl r)
+    r
+    (trans A b b c refl s)
+    (symm
+      (b = c)
+      r
+      (trans A b b c refl r)
+      (lu A b c r))
+    (trans
+      (b = c)
+      r
+      s
+      (trans A b b c refl s)
+      beta
+      (lu A b c s))
+
+
+#def whisker-l
+  (A : U)
+  (a b c : A)
+  (r s : b = c)
+  (p : a = b)
+  (beta : r = s)
+  : trans A a b c p r = trans A a b c p s
+  :=
+  idJ-2
+    A
+    b
+    (\z t -> trans A z b c t r = trans A z b c t s)
+    (whisker-l-refl A b c r s beta)
+    a
+    p
+
+#def horiz-comp
+  (A : U)
+  (a b c : A)
+  (p q : a = b)
+  (r s : b = c)
+  (alpha : p = q)
+  (beta : r = s)
+  : trans A a b c p r = trans A a b c q s
+  :=
+    trans
+      (a = c)
+      (trans A a b c p r)
+      (trans A a b c q r)
+      (trans A a b c q s)
+      (whisker-r A a b c p q alpha r)
+      (whisker-l A a b c r s q beta)
+
+#def horiz-comp'
+  (A : U)
+  (a b c : A)
+  (p q : a = b)
+  (r s : b = c)
+  (alpha : p = q)
+  (beta : r = s)
+  : trans A a b c p r = trans A a b c q s
+  :=
+    trans
+      (a = c)
+      (trans A a b c p r)
+      (trans A a b c p s)
+      (trans A a b c q s)
+      (whisker-l A a b c r s p beta)
+      (whisker-r A a b c p q alpha s)
+
+#def trans-ls2
+  (A : U)
+  (a : A)
+  : loop-space-2 A a -> loop-space-2 A a -> loop-space-2 A a
+  := trans (loop-space A a) refl refl refl
+
+#def ru-flip-ls2
+  (A : U)
+  (a : A)
+  (alpha : loop-space-2 A a)
+  : trans-ls2 A a alpha refl = alpha
+  :=
+  symm
+    (loop-space-2 A a)
+      alpha
+      (trans-ls2 A a alpha refl)
+      (ru (loop-space A a) refl refl alpha)
+
+#def whisker-r-ls2
+  (A : U)
+  (a : A)
+  (alpha1 alpha2 : loop-space-2 A a)
+  (p : alpha1 = alpha2)
+  (beta : loop-space-2 A a)
+  : trans-ls2 A a alpha1 beta = trans-ls2 A a alpha2 beta
+  :=
+  whisker-r
+    (loop-space A a)
+    refl refl refl
+    alpha1
+    alpha2
+    p
+    beta
+
+#def whisker-l-ls2
+  (A : U)
+  (a : A)
+  (beta1 beta2 : loop-space-2 A a)
+  (alpha : loop-space-2 A a)
+  (p : beta1 = beta2)
+  : trans-ls2 A a alpha beta1 = trans-ls2 A a alpha beta2
+  :=
+  whisker-l
+    (loop-space A a)
+    refl refl refl
+    beta1
+    beta2
+    alpha
+    p
+
+#def p-horiz-comp-q=p-comp-q
+  (A : U)
+  (a : A)
+  (alpha beta : loop-space-2 A a)
+  : horiz-comp A a a a refl refl refl refl alpha beta
+    = trans (loop-space A a) refl refl refl alpha beta
+  :=
+  let foo
+    : (trans-ls2 A a alpha (trans-ls2 A a beta refl))
+      = (trans-ls2 A a alpha beta)
+    :=
+    (whisker-l-ls2 A a
+      (trans-ls2 A a beta refl)
+      beta
+      alpha
+      (ru-flip-ls2 A a beta))
+  in
+  let
+    out
+    : horiz-comp A a a a refl refl refl refl alpha beta
+      = trans (loop-space A a) refl refl refl alpha beta
+    := trans ? ?
+    -- trans
+    --   (loop-space-2 A a)
+    --   (trans-ls2 A a (trans-ls2 A a alpha refl) (trans-ls2 A a beta refl))
+    --   (trans-ls2 A a alpha (trans-ls2 A a beta refl))
+    --   (trans-ls2 A a alpha beta)
+    --   (whisker-r-ls2 A a
+    --     (trans-ls2 A a alpha refl)
+    --     alpha
+    --     (ru-flip-ls2 A a alpha)
+    --     (trans-ls2 A a beta refl))
+    --   (whisker-l-ls2 A a
+    --     (trans-ls2 A a beta refl)
+    --     beta
+    --     alpha
+    --     (ru-flip-ls2 A a beta))
+  in
+  trans
+    (loop-space-2 A a)
+    (trans-ls2 A a (trans-ls2 A a alpha refl) (trans-ls2 A a beta refl))
+    (trans-ls2 A a alpha (trans-ls2 A a beta refl))
+    (trans-ls2 A a alpha beta)
+    (whisker-r-ls2 A a
+      (trans-ls2 A a alpha refl)
+      alpha
+      (ru-flip-ls2 A a alpha)
+      (trans-ls2 A a beta refl))
+    (whisker-l-ls2 A a
+      (trans-ls2 A a beta refl)
+      beta
+      alpha
+      (ru-flip-ls2 A a beta))

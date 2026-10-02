@@ -1,1 +1,151 @@
 #lang rzk-1
+
+#def ∧ˡ
+  (A B : U)
+  : U
+  := Σ (_ : A) , B
+
+#def comp
+  (A B C : U)
+  (f : B → C)
+  (g : A → B)
+  (x : A)
+  : C
+  := f (g x)
+
+#def id
+  (A : U)
+  (x : A)
+  : A
+  := x
+
+#def symm
+  (A : U)
+  (x y : A)
+  (x=y : x = y)
+  : y = x
+  :=
+  idJ
+    (A
+    , x
+    , \z _ → z = x
+    , refl
+    , y
+    , x=y
+    )
+
+#def cong
+  (A B : U)
+  (x y : A)
+  (f : A → B)
+  (eq : x = y)
+  : f x = f y
+  := idJ(A, x, \z _ → f x = f z, refl, y, eq)
+
+#def trans
+  (A : U)
+  (x y z : A)
+  (x=y : x = y)
+  (y=z : y = z)
+  : x = z
+  :=
+  idJ
+    ( A
+    , y
+    , \w _ → x = w
+    , x=y
+    , z
+    , y=z
+    )
+
+#def trans²
+  (A : U)
+  (a b c d : A)
+  (p : a = b)
+  (q : b = c)
+  (r : c = d)
+  : a = d
+  := trans A a c d (trans A a b c p q) r
+
+#def homotopy
+  (A B : U)
+  (f g : A → B)
+  : U
+  := (x : A) → f x = g x
+
+#def is-equiv
+  (A B : U)
+  (f : A → B)
+  : U
+  :=
+  ∧ˡ
+    (Σ (r : B → A) , homotopy A A (comp A B A r f) (id A))
+    (Σ (s : B → A) , homotopy B B (comp B A B f s) (id B))
+
+#def Equiv
+  (A B : U)
+  : U
+  := Σ (f : A → B) , is-equiv A B f
+
+#def qinv
+  (A B : U)
+  (f : A → B)
+  : U
+  :=
+  Σ (r : B → A)
+  , ∧ˡ
+    (homotopy A A (comp A B A r f) (id A))
+    (homotopy B B (comp B A B f r) (id B))
+
+#def is-equiv→qinv
+  (A B : U)
+  (f : A → B)
+  (f-is-equiv : is-equiv A B f)
+  : qinv A B f
+  :=
+  let ((r, r∘f∼id), (s, f∘s∼id)) := f-is-equiv in
+  let f∘r∼id
+    : homotopy B B (comp B A B f r) (id B)
+    := \b →
+    let frb=frfsb
+      : f (r b) = f (r (f (s b)))
+      :=
+      cong
+        B B
+        b (f (s b))
+        (\x -> f (r x))
+        (symm B (f (s b)) b (f∘s∼id b))
+    in
+    let frfsb=fsb
+      : f (r (f (s b))) = f (s b)
+      :=
+      cong
+        A B
+        (r (f (s b))) (s b)
+        f
+        (r∘f∼id (s b))
+    in
+    let fsb=b
+      : f (s b) = b
+      := f∘s∼id b
+    in
+    trans²
+      B
+      (f (r b))
+      (f (r (f (s b))))
+      (f (s b))
+      b
+      frb=frfsb
+      frfsb=fsb
+      fsb=b
+  in
+  (r , (r∘f∼id, f∘r∼id))
+
+#def sym-Equiv
+  (A B : U)
+  (A≃B : Equiv A B)
+  : Equiv B A
+  :=
+  let (f, f-is-equiv) := A≃B in
+  let (r, (r∘f∼id, f∘r∼id)) := is-equiv→qinv A B f f-is-equiv in
+  (r, ((f, f∘r∼id), (f, r∘f∼id)))

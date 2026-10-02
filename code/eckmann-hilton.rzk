@@ -5,7 +5,15 @@
   (x y : A)
   (x=y : x = y)
   : y = x
-  := idJ(A, x, \z _ -> z = x, refl, y, x=y)
+  :=
+  idJ
+    (A
+    , x
+    , \z _ → z = x
+    , refl
+    , y
+    , x=y
+    )
 
 #def trans
   (A : U)
@@ -13,21 +21,54 @@
   (x=y : x = y)
   (y=z : y = z)
   : x = z
-  := idJ(A, y, \w _ -> x = w, x=y, z, y=z)
+  :=
+  idJ
+    ( A
+    , y
+    , \w _ → x = w
+    , x=y
+    , z
+    , y=z
+    )
+
+#def trans²
+  (A : U)
+  (a b c d : A)
+  (p : a = b)
+  (q : b = c)
+  (r : c = d)
+  : a = d
+  := trans A a c d (trans A a b c p q) r
 
 #def lu
   (A : U)
   (x y : A)
-  (x=y : x = y)
-  : x=y = trans A x x y refl x=y
-  := idJ(A, x, \z p -> p = trans A x x z refl p, refl, y, x=y)
+  (p : x = y)
+  : p = trans A x x y refl p
+  :=
+  idJ
+    ( A
+    , x
+    , \z q → q = trans A x x z refl q
+    , refl
+    , y
+    , p
+    )
 
 #def ru
   (A : U)
   (x y : A)
-  (x=y : x = y)
-  : x=y = trans A x y y x=y refl
-  := idJ(A, x, \z p -> p = trans A x z z p refl, refl, y, x=y)
+  (p : x = y)
+  : p = trans A x y y p refl
+  :=
+  idJ
+    ( A
+    , x
+    , \z q → q = trans A x z z q refl
+    , refl
+    , y
+    , p
+    )
 
 #def symm-symm
   (A : U)
@@ -38,27 +79,30 @@
   idJ
     ( A
     , x
-    , \z q -> symm A z x (symm A x z q) = q
+    , \z q → symm A z x (symm A x z q) = q
     , refl
     , y
     , p
     )
 
 
-#def idJ-2
+#def idJ²
   (A : U)
   (b : A)
-  (D : (x : A) -> (p : x = b) -> U)
+  (D : (x : A) → (p : x = b) → U)
   (d : D b refl)
   (x : A)
   (p : x = b)
   : D x p
   :=
-  let d-symm-symm : D x (symm A b x (symm A x b p)) :=
+  let
+    d-symm-symm
+    : D x (symm A b x (symm A x b p))
+    :=
     idJ
       ( A
       , b
-      , \z q -> D z (symm A b z q)
+      , \z q → D z (symm A b z q)
       , d
       , x
       , symm A x b p
@@ -67,105 +111,95 @@
   idJ
     ( x = b
     , symm A b x (symm A x b p)
-    , \q _ -> D x q
+    , \q _ → D x q
     , d-symm-symm
     , p
     , symm-symm A x b p
     )
 
-#def loop-space
+#def Ω
   (A : U)
   (a : A)
   : U
   := a = a
 
-#def loop-space-2
+#def Ω²
   (A : U)
   (a : A)
   : U
   := refl =_{a = a} refl
 
-#def whisker-r-refl
- (A : U)
- (a b : A)
- (p q : a = b)
- (alpha : p = q)
- : trans A a b b p refl = trans A a b b q refl
- :=
-   trans
-     (a = b)
-     (trans A a b b p refl)
-     p
-     (trans A a b b q refl)
-     (symm
-        (a = b)
-        p
-        (trans A a b b p refl)
-        (ru A a b p))
-     (trans
-       (a = b)
-       p
-       q
-       (trans A a b b q refl)
-       alpha
-       (ru A a b q))
-
 #def whisker-r
   (A : U)
   (a b c : A)
   (p q : a = b)
-  (alpha : p = q)
+  (α : p = q)
   (r : b = c)
   : trans A a b c p r = trans A a b c q r
+  -- p ■ r = q ■ r
   :=
+  let ■ := trans A a b b in
+  let eq1
+    : ■ p refl = p
+    := symm (a = b) p (■ p refl) (ru A a b p)
+  in
+  let eq2
+    : p = q
+    := α
+  in
+  let eq3
+    : q = ■ q refl
+    := ru A a b q
+  in
+  let p■refl=q■refl
+    : ■ p refl = ■ q refl
+    :=
+    trans²
+      (a = b)
+      (■ p refl) p q (■ q refl)
+      eq1 eq2 eq3
+  in
   idJ
     ( A
     , b
-    , \z t -> trans A a b z p t = trans A a b z q t
-    , whisker-r-refl A a b p q alpha
+    , \z t → trans A a b z p t = trans A a b z q t
+    , p■refl=q■refl
     , c
     , r
     )
-
-#def whisker-l-refl
-  (A : U)
-  (b c : A)
-  (r s : b = c)
-  (beta : r = s)
-  : trans A b b c refl r = trans A b b c refl s
-  :=
-  trans
-    (b = c)
-    (trans A b b c refl r)
-    r
-    (trans A b b c refl s)
-    (symm
-      (b = c)
-      r
-      (trans A b b c refl r)
-      (lu A b c r))
-    (trans
-      (b = c)
-      r
-      s
-      (trans A b b c refl s)
-      beta
-      (lu A b c s))
-
 
 #def whisker-l
   (A : U)
   (a b c : A)
   (r s : b = c)
   (p : a = b)
-  (beta : r = s)
+  (β : r = s)
   : trans A a b c p r = trans A a b c p s
   :=
-  idJ-2
+  let ■ := trans A b b c in
+  let eq1
+    : ■ refl r = r
+    := symm (b = c) r (■ refl r) (lu A b c r)
+  in
+  let eq2
+    : r = s
+    := β
+  in
+  let eq3
+    : s = ■ refl s
+    := lu A b c s
+  in
+  let refl■r=refl■s :=
+    trans²
+      (b = c)
+      (■ refl r) r s (■ refl s)
+      eq1 eq2 eq3
+  in
+  idJ²
     A
     b
-    (\z t -> trans A z b c t r = trans A z b c t s)
-    (whisker-l-refl A b c r s beta)
+    (\z t → trans A z b c t r = trans A z b c t s)
+    refl■r=refl■s
     a
     p
 
@@ -203,106 +237,150 @@
       (whisker-l A a b c r s p beta)
       (whisker-r A a b c p q alpha s)
 
-#def trans-ls2
+#def α⋆β=α■β
   (A : U)
   (a : A)
-  : loop-space-2 A a -> loop-space-2 A a -> loop-space-2 A a
-  := trans (loop-space A a) refl refl refl
-
-#def ru-flip-ls2
-  (A : U)
-  (a : A)
-  (alpha : loop-space-2 A a)
-  : trans-ls2 A a alpha refl = alpha
+  (α β : Ω² A a)
+  : horiz-comp A a a a refl refl refl refl α β
+    = trans (a = a) refl refl refl α β
   :=
-  symm
-    (loop-space-2 A a)
-      alpha
-      (trans-ls2 A a alpha refl)
-      (ru (loop-space A a) refl refl alpha)
-
-#def whisker-r-ls2
-  (A : U)
-  (a : A)
-  (alpha1 alpha2 : loop-space-2 A a)
-  (p : alpha1 = alpha2)
-  (beta : loop-space-2 A a)
-  : trans-ls2 A a alpha1 beta = trans-ls2 A a alpha2 beta
-  :=
-  whisker-r
-    (loop-space A a)
-    refl refl refl
-    alpha1
-    alpha2
-    p
-    beta
-
-#def whisker-l-ls2
-  (A : U)
-  (a : A)
-  (beta1 beta2 : loop-space-2 A a)
-  (alpha : loop-space-2 A a)
-  (p : beta1 = beta2)
-  : trans-ls2 A a alpha beta1 = trans-ls2 A a alpha beta2
-  :=
-  whisker-l
-    (loop-space A a)
-    refl refl refl
-    beta1
-    beta2
-    alpha
-    p
-
-#def p-horiz-comp-q=p-comp-q
-  (A : U)
-  (a : A)
-  (alpha beta : loop-space-2 A a)
-  : horiz-comp A a a a refl refl refl refl alpha beta
-    = trans (loop-space A a) refl refl refl alpha beta
-  :=
-  let foo
-    : (trans-ls2 A a alpha (trans-ls2 A a beta refl))
-      = (trans-ls2 A a alpha beta)
-    :=
-    (whisker-l-ls2 A a
-      (trans-ls2 A a beta refl)
-      beta
-      alpha
-      (ru-flip-ls2 A a beta))
+  let ■ := trans (Ω A a) refl refl refl in
+  let ⋆ := horiz-comp A a a a refl refl refl refl in
+  let _
+    : ⋆ α β = ■ (■ refl α) (■ refl β)
+    := refl
   in
-  let
-    out
-    : horiz-comp A a a a refl refl refl refl alpha beta
-      = trans (loop-space A a) refl refl refl alpha beta
-    := trans ? ?
-    -- trans
-    --   (loop-space-2 A a)
-    --   (trans-ls2 A a (trans-ls2 A a alpha refl) (trans-ls2 A a beta refl))
-    --   (trans-ls2 A a alpha (trans-ls2 A a beta refl))
-    --   (trans-ls2 A a alpha beta)
-    --   (whisker-r-ls2 A a
-    --     (trans-ls2 A a alpha refl)
-    --     alpha
-    --     (ru-flip-ls2 A a alpha)
-    --     (trans-ls2 A a beta refl))
-    --   (whisker-l-ls2 A a
-    --     (trans-ls2 A a beta refl)
-    --     beta
-    --     alpha
-    --     (ru-flip-ls2 A a beta))
+  let ⟨refl■p⟩=p
+    : (p : Ω² A a) → ■ refl p = p
+    := \p →
+    symm
+      (Ω² A a)
+      p
+      (■ refl p)
+      (lu (Ω A a) refl refl p)
+  in
+  let ⟨refl■α⟩■⟨refl■β⟩=α■⟨refl■β⟩
+    : ■ (■ refl α) (■ refl β) = ■ α (■ refl β)
+    :=
+    whisker-r
+      (Ω A a) refl refl refl
+      (■ refl α) α
+      (⟨refl■p⟩=p α)
+      (■ refl β)
+  in
+  let α■⟨refl■β⟩=α■β
+    : ■ α (■ refl β) = ■ α β
+    :=
+    whisker-l
+      (Ω A a) refl refl refl
+      (■ refl β) β
+      α
+      (⟨refl■p⟩=p β)
   in
   trans
-    (loop-space-2 A a)
-    (trans-ls2 A a (trans-ls2 A a alpha refl) (trans-ls2 A a beta refl))
-    (trans-ls2 A a alpha (trans-ls2 A a beta refl))
-    (trans-ls2 A a alpha beta)
-    (whisker-r-ls2 A a
-      (trans-ls2 A a alpha refl)
-      alpha
-      (ru-flip-ls2 A a alpha)
-      (trans-ls2 A a beta refl))
-    (whisker-l-ls2 A a
-      (trans-ls2 A a beta refl)
-      beta
-      alpha
-      (ru-flip-ls2 A a beta))
+    (Ω² A a)
+    (■ (■ refl α) (■ refl β))
+    (■ α (■ refl β))
+    (■ α β)
+    ⟨refl■α⟩■⟨refl■β⟩=α■⟨refl■β⟩
+    α■⟨refl■β⟩=α■β
+
+#def α⋆'β=β■α
+  (A : U)
+  (a : A)
+  (α β : Ω² A a)
+  : horiz-comp' A a a a refl refl refl refl α β
+    = trans (a = a) refl refl refl β α
+  :=
+  let ■ := trans (Ω A a) refl refl refl in
+  let ⋆' := horiz-comp' A a a a refl refl refl refl in
+  let _
+    : ⋆' α β = ■ (■ refl β) (■ refl α)
+    := refl
+  in
+  let ⟨refl■p⟩=p
+    : (p : Ω² A a) → ■ refl p = p
+    := \p →
+    symm
+      (Ω² A a)
+      p
+      (■ refl p)
+      (lu (Ω A a) refl refl p)
+  in
+  let ⟨refl■β⟩■⟨refl■α⟩=β■⟨refl■β⟩
+    : ■ (■ refl β) (■ refl α) = ■ β (■ refl α)
+    :=
+    whisker-r
+      (Ω A a) refl refl refl
+      (■ refl β) β
+      (⟨refl■p⟩=p β)
+      (■ refl α)
+  in
+  let β■⟨refl■α⟩=β■α
+    : ■ β (■ refl α) = ■ β α
+    :=
+    whisker-l
+      (Ω A a) refl refl refl
+      (■ refl α) α
+      β
+      (⟨refl■p⟩=p α)
+  in
+ trans
+   (Ω² A a)
+   (■ (■ refl β) (■ refl α))
+   (■ β (■ refl α))
+   (■ β α)
+   ⟨refl■β⟩■⟨refl■α⟩=β■⟨refl■β⟩
+   β■⟨refl■α⟩=β■α
+
+#def α⋆β=α⋆'β
+  (A : U)
+  (a : A)
+  (α β : Ω² A a)
+  : horiz-comp A a a a refl refl refl refl α β
+    = horiz-comp' A a a a refl refl refl refl α β
+  :=
+  let ⋆ := horiz-comp A a a a refl refl refl refl in
+  let ⋆' := horiz-comp' A a a a refl refl refl refl in
+  let refl⋆β=refl⋆'β
+    : ⋆ refl β = ⋆' refl β
+    :=
+    idJ
+      ( Ω A a
+      , refl
+      , \x p →
+        horiz-comp  A a a a refl refl refl x refl p
+        = horiz-comp' A a a a refl refl refl x refl p
+      , refl
+      , refl
+      , β
+      )
+
+  in
+  idJ
+    ( Ω A a
+    , refl
+    , \x p →
+      horiz-comp A a a a refl x refl refl p β
+      = horiz-comp' A a a a refl x refl refl p β
+    , refl⋆β=refl⋆'β
+    , refl
+    , α
+    )
+
+#def comm-■-Ω²
+  (A : U)
+  (a : A)
+  (α β : Ω² A a)
+  : trans (Ω A a) refl refl refl α β
+    = trans (Ω A a) refl refl refl β α
+  :=
+  let ■ := trans (Ω A a) refl refl refl in
+  let ⋆ := horiz-comp A a a a refl refl refl refl in
+  let ⋆' := horiz-comp' A a a a refl refl refl refl in
+  trans²
+    (Ω² A a)
+    (■ α β) (⋆ α β) (⋆' α β) (■ β α)
+    (symm (Ω² A a) (⋆ α β) (■ α β) (α⋆β=α■β A a α β))
+    (α⋆β=α⋆'β A a α β)
+    (α⋆'β=β■α A a α β)

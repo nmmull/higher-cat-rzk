@@ -1,0 +1,13 @@
+#lang rzk-1
+
+#def trans
+  (A B C : U)
+  : U
+  := A = B
+
+#def symm
+  (A : U)
+  (x y : A)
+  (p : x = y)
+  : y = x
+  := trans ? ? ?

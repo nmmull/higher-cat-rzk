@@ -1,0 +1,47 @@
+#lang rzk-1
+
+#def Δ¹
+  : 2 → TOPE
+  := \ t → TOP
+
+#def arr
+  (A : U)
+  : U
+  := Δ¹ → A
+
+#def hom
+  (A : U)
+  (x y : A)
+  : U
+  := (t : Δ¹) → A [ t ≡ 0₂ ↦ x , t ≡ 1₂ ↦ y ]
+
+#def Δ²
+  : ( 2 × 2) → TOPE
+  := \ (t , s) → s ≤ t
+
+#def hom²
+  (A : U)
+  (x y z : A)
+  (f : hom A x y)
+  (g : hom A y z)
+  (h : hom A x z)
+  : U
+  :=
+  ((t₁, t₂) : Δ²) → A
+  [ t₂ ≡ 0₂ ↦ f t₁
+  , t₁ ≡ 1₂ ↦ g t₂
+  , t₁ ≡ t₂ ↦ h t₁
+  ]
+
+#def is-segal-wrong
+  ( A : U)
+  : U
+  :=
+  ( x : A) → (y : A) → (z : A)
+  → ( f : hom A x y) → (g : hom A y z)
+  → Σ (h : hom A x z) , (hom² A x y z f g h)
+
+#def is-contr
+  ( A : U)
+  : U
+  := Σ (c : A) , (x : A) → c = x

@@ -1,0 +1,182 @@
+#lang rzk-1
+
+#def symm
+  (A : U)
+  (x y : A)
+  (x=y : x = y)
+  : y = x
+  :=
+  idJ
+    (A
+    , x
+    , \z _ → z = x
+    , refl
+    , y
+    , x=y
+    )
+
+#def trans
+  (A : U)
+  (x y z : A)
+  (x=y : x = y)
+  (y=z : y = z)
+  : x = z
+  :=
+  idJ
+    ( A
+    , y
+    , \w _ → x = w
+    , x=y
+    , z
+    , y=z
+    )
+
+#def trans²
+  (A : U)
+  (a b c d : A)
+  (p : a = b)
+  (q : b = c)
+  (r : c = d)
+  : a = d
+  := trans A a c d (trans A a b c p q) r
+
+#def cong
+  (A B : U)
+  (x y : A)
+  (f : A → B)
+  (eq : x = y)
+  : f x = f y
+  := idJ(A, x, \z _ → f x = f z, refl, y, eq)
+
+
+#def left-unit
+  (A : U)
+  (x y : A)
+  (p : x = y)
+  : p = trans A x x y refl p
+  :=
+  idJ
+    ( A
+    , x
+    , \z q → q = trans A x x z refl q
+    , refl
+    , y
+    , p
+    )
+
+#def right-unit
+  (A : U)
+  (x y : A)
+  (p : x = y)
+  : p = trans A x y y p refl
+  :=
+  idJ
+    ( A
+    , x
+    , \z q → q = trans A x z z q refl
+    , refl
+    , y
+    , p
+    )
+
+#def symm-symm
+  (A : U)
+  (x y : A)
+  (p : x = y)
+  : symm A y x (symm A x y p) = p
+  :=
+  idJ
+    ( A
+    , x
+    , \z q → symm A z x (symm A x z q) = q
+    , refl
+    , y
+    , p
+    )
+
+#def idJ₂
+  (A : U)
+  (b : A)
+  (D : (x : A) → (p : x = b) → U)
+  (d : D b refl)
+  (x : A)
+  (p : x = b)
+  : D x p
+  :=
+  let
+    d-symm-symm
+    : D x (symm A b x (symm A x b p))
+    :=
+    idJ
+      ( A
+      , b
+      , \z q → D z (symm A b z q)
+      , d
+      , x
+      , symm A x b p
+      )
+  in
+  idJ
+    ( x = b
+    , symm A b x (symm A x b p)
+    , \q _ → D x q
+    , d-symm-symm
+    , p
+    , symm-symm A x b p
+    )
+
+#def transport
+  (A : U)
+  (B : A → U)
+  (x y : A)
+  (p : x = y)
+  (b : B x)
+  : B y
+  := idJ (A, x, \z _ → B z, b, y, p)
+
+#def eq-Σ
+  (A : U)
+  (B : A → U)
+  (x y : A)
+  (bx : B x)
+  (by : B y)
+  (x=y : x = y)
+  (p : transport A B x y x=y bx = by)
+  : (x, bx) =_{Σ (a : A) , B a} (y, by)
+  :=
+  let eq₁
+    : (x, bx)
+      =_{Σ (a : A), B a}
+      (y, transport A B x y x=y bx)
+    :=
+    idJ
+      ( A
+      , x
+      , \a q →
+        (x, bx)
+        =_{Σ (z : A) , B z}
+        (a, transport A B x a q bx)
+      , refl
+      , y
+      , x=y
+      )
+  in
+  let eq₂
+    : (y, transport A B x y x=y bx)
+      =_{Σ (a : A) , B a}
+      (y, by)
+    :=
+    cong
+      (B y)
+      (Σ (a : A) , B a)
+      (transport A B x y x=y bx)
+      by
+      (\z → (y, z))
+      p
+  in
+  trans
+    (Σ (a : A) , B a)
+    (x, bx)
+    (y, transport A B x y x=y bx)
+    (y, by)
+    eq₁ eq₂

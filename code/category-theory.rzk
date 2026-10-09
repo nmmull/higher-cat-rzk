@@ -1,0 +1,196 @@
+#lang rzk-1
+
+#def hom
+  (A : U)
+  (x y : A)
+  : U
+  := (t : 2) → A [
+    t ≡ 0₂ ↦ x,
+    t ≡ 1₂ ↦ y
+  ]
+
+#def Δ²
+  : (2 × 2) → TOPE
+  := \(t , s) → s ≤ t
+
+-- #def ∂Δ²
+--   : (2 × 2) → TOPE
+--   := \(t, s) → s ≡ 0₂ ∨ t ≡ 1₂ ∨ s ≡ t
+
+#def hom²
+  (A : U)
+  (x y z : A)
+  (f : hom A x y)
+  (g : hom A y z)
+  (h : hom A x z)
+  : U
+  :=
+  ((t₁ , t₂) : Δ²) → A [
+    t₂ ≡ 0₂ ↦ f t₁,
+    t₁ ≡ 1₂ ↦ g t₂,
+    t₂ ≡ t₁ ↦ h t₂
+  ]
+
+#def id-hom
+  (A : U)
+  (x : A)
+  : hom A x x
+  := \t → x
+
+#def const-triangle
+  (A : U)
+  (x : A)
+  : hom² A x x x (id-hom A x) (id-hom A x) (id-hom A x)
+  := \(t, s) → x
+
+#def is-segal
+  (A : U)
+  : U
+  :=
+  (x y z : A)
+  → (f : hom A x y) → (g : hom A y z)
+  → is-contr (Σ (h : hom A x z) , (hom² A x y z f g h))
+
+#def ∘
+  (A : U)
+  (A-is-segal : is-segal A)
+  (x y z : A)
+  (f : hom A x y)
+  (g : hom A y z)
+  : hom A x z
+  := π₁ (π₁ (A-is-segal x y z f g))
+
+#def ∘-is-hom²
+  (A : U)
+  (A-is-segal : is-segal A)
+  (x y z : A)
+  (f : hom A x y)
+  (g : hom A y z)
+  : hom² A x y z f g (∘ A A-is-segal x y z f g)
+  := π₂ (π₁ (A-is-segal x y z f g))
+
+#def ∘-is-unique
+  (A : U)
+  (A-is-segal : is-segal A)
+  (x y z : A)
+  (f : hom A x y)
+  (g : hom A y z)
+  (h : hom A x z)
+  (h-is-f∘g : hom² A x y z f g h)
+  : ∘ A A-is-segal x y z f g = h
+  :=
+  let ((f∘g, f∘g-is-f∘g), p) := A-is-segal x y z f g in
+  cong
+     (Σ (q : hom A x z) , hom² A x y z f g q)
+     (hom A x z)
+     (f∘g, f∘g-is-f∘g)
+     (h, h-is-f∘g)
+     (\p → π₁ p)
+     (p (h, h-is-f∘g))
+
+#def f∘id-hom=f
+  (A : U)
+  (A-is-segal : is-segal A)
+  (x y : A)
+  (f : hom A x y)
+  : (∘ A A-is-segal x y y f (id-hom A y)) = f
+  :=
+  let ru-id-hom
+    : hom² A x y y f (id-hom A y) f
+    := \(t, s) -> f t
+  in
+  ∘-is-unique
+    A
+    A-is-segal
+    x y y
+    f
+    (id-hom A y)
+    f
+    ru-id-hom
+
+#def id-hom∘f=f
+  (A : U)
+  (A-is-segal : is-segal A)
+  (x y : A)
+  (f : hom A x y)
+  : (∘ A A-is-segal x x y (id-hom A x) f) = f
+  :=
+  let lu-id-hom
+    : hom² A x x y (id-hom A x) f f
+    := \(t, s) -> f s
+  in
+  ∘-is-unique
+    A
+    A-is-segal
+    x x y
+    (id-hom A x)
+    f
+    f
+    lu-id-hom
+
+#def ap-hom
+  (A B : U)
+  (F : A → B)
+  (x y : A)
+  (f : hom A x y)
+  : hom B (F x) (F y)
+  := \t → F (f t)
+
+#def ap-hom-preserves-composability
+  (A B : U)
+  (F : A → B)
+  (x y z : A)
+  (f : hom A x y)
+  (g : hom A y z)
+  (h : hom A x z)
+  (α : hom² A x y z f g h)
+  : hom²
+      B
+      (F x) (F y) (F z)
+      (ap-hom A B F x y f)
+      (ap-hom A B F y z g)
+      (ap-hom A B F x z h)
+  := \t → F (α t)
+
+#def Ff∘Fg=F⟨f∘g⟩
+  (A B : U)
+  (A-is-segal : is-segal A)
+  (B-is-segal : is-segal B)
+  (F : A → B)
+  (x y z : A)
+  (f : hom A x y)
+  (g : hom A y z)
+  : (∘ B B-is-segal (F x) (F y) (F z) (ap-hom A B F x y f) (ap-hom A B F y z g))
+    = (ap-hom A B F x z (∘ A A-is-segal x y z f g))
+  :=
+  ∘-is-unique
+    B B-is-segal
+    (F x) (F y) (F z)
+    (ap-hom A B F x y f)
+    (ap-hom A B F y z g)
+    (ap-hom A B F x z (∘ A A-is-segal x y z f g))
+    (ap-hom-preserves-composability
+      A B F x y z f g
+      (∘ A A-is-segal x y z f g)
+      (∘-is-hom² A A-is-segal x y z f g))
+
+#def nat-trans
+  (A : U)
+  (B : A → U)
+  (f g : (x : A) → B x)
+  : U
+  := hom ((x : A) → B x) f g
+
+#def nat-trans-components
+  (A : U)
+  (B : A → U)
+  (f g : (x : A) → B x)
+  : U
+  := (x : A) → (hom (B x) (f x) (g x))
+
+-- #def nat-trans≃nat-trans-components
+--   (A : U)
+--   (B : A → U)
+--   (f g : (x : A) → B x)
+--   : Equiv (nat-trans A B f g) (nat-trans-components A B f g)
+--   := ?

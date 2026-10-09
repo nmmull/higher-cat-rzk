@@ -1,0 +1,52 @@
+#lang rzk-1
+
+#def Δ¹
+  : 2 → TOPE
+  := \ t → TOP
+
+#def ∧ˡ
+  (A B : U)
+  : U
+  := Σ (_ : A) , B
+
+#def ∧³
+  (A B C : U)
+  : U
+  := Σ (_ : A) , Σ (_ : B) , C
+
+#def hom
+  (A : U)
+  (x y : A)
+  : U
+  := Σ (f : 2 → A) , ∧ˡ (f 0₂ = x) (f 1₂ = y)
+
+#def id
+  (A : U)
+  (x : A)
+  : hom A x x
+  := (\t → x, (refl, refl))
+
+#def Δ²
+  : (2 × 2) → TOPE
+  := \(t , s) → s ≤ t
+
+#def ∂Δ²
+  : (2 × 2) → TOPE
+  := \(t, s) → s ≡ 0₂ ∨ t ≡ 1₂ ∨ s ≡ t
+
+#def hom²
+  (A : U)
+  (x y z : A)
+  (f : hom A x y)
+  (g : hom A y z)
+  (h : hom A x z)
+  : U
+  :=
+  Σ (k : ∂Δ² → A) ,
+  Σ (_ : k (0₂, 0₂) = x) ,
+  Σ (_ : k (1₂, 0₂) = y) ,
+  Σ (_ : k (1₂, 1₂) = z) ,
+  Σ (_ : (t : 2) → k (t, 0₂) = π₁ f t) ,
+  Σ (_ : (s : 2) → k (1₂, s) = π₁ g s) ,
+  Σ (_ : (p : 2) → k (p, p) = π₁ h p) ,
+  Unit

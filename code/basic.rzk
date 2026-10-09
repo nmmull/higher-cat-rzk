@@ -1,0 +1,32 @@
+#lang rzk-1
+
+#def id
+  (A : U)
+  (a : A)
+  : A
+  := a
+
+#def comp
+  (A B C : U)
+  (f : B → C)
+  (g : A → B)
+  (a : A)
+  : C
+  := f (g a)
+
+#def prod
+  (A B : U)
+  : U
+  := Σ (_ : A) ,  B
+
+#def iff
+  (A B : U)
+  : U
+  := prod (A → B) (B → A)
+
+#def fib
+  (A B : U)
+  (f : A → B)
+  (b : B)
+  : U
+  := Σ (a : A) , f a = b

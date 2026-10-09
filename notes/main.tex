@@ -40,7 +40,7 @@
 
 \abstract{
   This is a document for organizing ideas and material for a directed study on higher category theory using the Rzk proof assistant \cite{rzk}.
-  The primary goal of this direct study (for me) is to understand to what extend the study of higher category theory at an introductory level can be made simpler or more interesting by using a proof assistant designed for higher category theory.
+  The primary goal of this direct study (for me) is to understand to what extent the study of higher category theory at an introductory level can be made simpler or more interesting by using a proof assistant designed for higher category theory.
   Figure \ref{fig:schedule} has a rough schedule for the semester.
   \begin{figure}
     \begin{tabular}{|c|l|}
@@ -99,11 +99,11 @@ I played around very breifly with it, the features related to dependent types se
   I don't know what this means, and clicking around nLab didn't help.
   Hopefully they'll make it more clear in these notes.
 \item
-  It took me a moment to realize why we call a proof pointwise equality a homotopy.
-  A homotopy from $f : X \to Y$ to $g : X \to Y$ is typically defined as a continuous function $h : X \times [0, 1] \to Y$ such that $h(\cdot, 0) = f$ and $h(\cdot, 1) = g$.
+  It took me a moment to realize why we call a proof of pointwise equality a homotopy.
+  A homotopy from $f : X \to Y$ to $g : X \to Y$ is a continuous function $h : X \times [0, 1] \to Y$ such that $h(\cdot, 0) = f$ and $h(\cdot, 1) = g$.
   For any $x \in X$, the function $h(x, \cdot) : [0, 1] \to Y$ is a path from $f(x)$ to $g(x)$.
-  In the Curry-Howard-Voevodsky correspondense, paths are equality types.
-  The \enquote{Curried} version of $h$ is something that maps $x : X$ to paths (equalities) between $f(x)$ and $g(x)$ (seems obvious in retrospect).
+  In the Curry-Howard-Voevodsky sense, paths are equality types.
+  The \enquote{Curried} version of $h$ is something that maps $x : X$ to paths (equalities) between $f(x)$ and $g(x)$ (this seems obvious in retrospect).
 \item
   There is a typo (as of 2026-09-21) in the definition of $\textsf{is-equiv}_{A, B}(f)$.
   It should read:
@@ -115,7 +115,31 @@ I played around very breifly with it, the features related to dependent types se
   The major issue with Rzk egonomics-wise at the moment is that the typechecker only looks at the topmost hole.
 \end{itemize}
 
+\section{Simplicial homotopy and Segal types}
+\begin{itemize}
+\item
+  I've spent most of what time I have finishing the formalizations of Eckmann-Hilton and the fact that type equivalence is symmetric (in particular, equivalences are also quasi-inverses).
+  I'm starting to get a better hang of the ergonomics of Rzk.
+  You can only work on one hole at a time, so you have to have a sense of what you're going to prove before you go to formalize.
+  Also, it's incredibly important to use local definitions.
+  This makes it possible to make partial progress on a proof, and to make things easier to read.
+  I found myself using a pattern of specializing important operations within a proof so that I could simplify the sub-proofs.
+\end{itemize}
 
+\subsection*{Exercises}
+\begin{itemize}
+\item Prove that type equivalence is symmetric in Rzk.
+\item Do all of \textit{Synthetic $\infty$-category theory} Lecture 2 \cite{weinberger-2026} using their first more \enquote{difficult} definition of a hom-set.
+\item Define the boundard of the 2-simplex in Rzk.
+\item Can everything in Lecture 2 \cite{weinberger-2026} be done on the boundary of the 2-simplex instead of on the 2-simplex itself?
+\end{itemize}
+
+\section{Category theory with Segal types} \\
+
+\begin{itemize}
+\item
+
+\end{itemize}
 
 
 

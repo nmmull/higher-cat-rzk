@@ -1,0 +1,241 @@
+#lang rzk-1
+
+#def is-equiv
+  (A B : U)
+  (f : A → B)
+  : U
+  :=
+  prod
+    (Σ (r : B → A) , homotopy A A (comp A B A r f) (id A))
+    (Σ (s : B → A) , homotopy B B (comp B A B f s) (id B))
+
+#def is-qinv
+  (A B : U)
+  (f : A → B)
+  : U
+  :=
+  Σ (r : B → A)
+  , prod
+    (homotopy A A (comp A B A r f) (id A))
+    (homotopy B B (comp B A B f r) (id B))
+
+#def is-qinv→is-equiv
+  (A B : U)
+  (f : A → B)
+  (f-is-qinv : is-qinv A B f)
+  : is-equiv A B f
+  :=
+  let (r, (r∘f∼id, f∘r∼id)) := f-is-qinv in
+  ((r, r∘f∼id), (r, f∘r∼id))
+
+#def is-equiv→is-qinv
+  (A B : U)
+  (f : A → B)
+  (f-is-equiv : is-equiv A B f)
+  : is-qinv A B f
+  :=
+  let ((r, r∘f∼id), (s, f∘s∼id)) := f-is-equiv in
+  let f∘r∼id
+    : homotopy B B (comp B A B f r) (id B)
+    := \b →
+    let frb=frfsb
+      : f (r b) = f (r (f (s b)))
+      :=
+      cong
+        B B
+        b (f (s b))
+        (\x -> f (r x))
+        (symm B (f (s b)) b (f∘s∼id b))
+    in
+    let frfsb=fsb
+      : f (r (f (s b))) = f (s b)
+      :=
+      cong
+        A B
+        (r (f (s b))) (s b)
+        f
+        (r∘f∼id (s b))
+    in
+    let fsb=b
+      : f (s b) = b
+      := f∘s∼id b
+    in
+    trans²
+      B
+      (f (r b))
+      (f (r (f (s b))))
+      (f (s b))
+      b
+      frb=frfsb
+      frfsb=fsb
+      fsb=b
+  in
+  (r , (r∘f∼id, f∘r∼id))
+
+#def Equiv
+  (A B : U)
+  : U
+  := Σ (f : A → B) , is-equiv A B f
+
+-- A ≃ A
+#def refl-Equiv
+  (A : U)
+  : Equiv A A
+  :=
+  ( id A
+  , ( (id A, refl-homotopy A A (id A))
+    , (id A, refl-homotopy A A (id A))
+    )
+  )
+
+-- A ≃ B → B ≃ A
+#def symm-Equiv
+  (A B : U)
+  (A≃B : Equiv A B)
+  : Equiv B A
+  :=
+  let (f, f-is-equiv) := A≃B in
+  let (r, (r∘f∼id, f∘r∼id)) := is-equiv→is-qinv A B f f-is-equiv in
+  (r, ((f, f∘r∼id), (f, r∘f∼id)))
+
+-- A ≃ B → B ≃ C → A ≃ C
+#def trans-Equiv
+  (A B C : U)
+  (A≃B : Equiv A B)
+  (B≃C : Equiv B C)
+  : Equiv A C
+  :=
+  let (f, ((r, r∘f∼id), (s, f∘s∼id))) := A≃B in
+  let (g, ((t, t∘g∼id), (u, g∘u∼id))) := B≃C in
+  let g∘f : A → C := comp A B C g f in
+  let r∘t : C → A := comp C B A r t in
+  let ⟨r∘t⟩∘⟨g∘f⟩ : A → A := comp A C A r∘t g∘f in
+  let ⟨r∘t⟩∘⟨g∘f⟩∼id
+    : homotopy A A ⟨r∘t⟩∘⟨g∘f⟩ (id A)
+    := \a →
+    let rtgfa=rfa
+      : r (t (g (f a))) = r (f a)
+      :=
+      cong B A
+        (t (g (f a)))
+        (f a)
+        r
+        (t∘g∼id (f a))
+    in
+    trans A
+      (r (t (g (f a))))
+      (r (f a))
+      a
+      rtgfa=rfa
+      (r∘f∼id a)
+  in
+  let s∘u : C → A := comp C B A s u in
+  let ⟨g∘f⟩∘⟨s∘u⟩ : C → C := comp C A C g∘f s∘u in
+  let ⟨g∘f⟩∘⟨s∘u⟩∼id
+    : homotopy C C ⟨g∘f⟩∘⟨s∘u⟩ (id C)
+    := \a →
+    let gfsua=gua
+      : g (f (s (u a))) = g (u a)
+      :=
+      cong B C
+        (f (s (u a)))
+        (u a)
+        g
+        (f∘s∼id (u a))
+    in
+    trans C
+      (g (f (s (u a))))
+      (g (u a))
+      a
+      gfsua=gua
+      (g∘u∼id a)
+  in
+  (g∘f
+  , ( (r∘t, ⟨r∘t⟩∘⟨g∘f⟩∼id)
+    , (s∘u, ⟨g∘f⟩∘⟨s∘u⟩∼id)
+    )
+  )
+
+#def is-contr→≃Unit
+  (A : U)
+  (A-is-contr : is-contr A)
+  : Equiv A Unit
+  :=
+  let (c, ∀a.c=a) := A-is-contr in
+  let j : A → Unit := \_ -> unit in
+  let k : Unit → A := \_ → c in
+  let k∘j := comp A Unit A k j in
+  let k∘j∼id
+    : homotopy A A k∘j (id A)
+    := ∀a.c=a
+  in
+  let j∘k := comp Unit A Unit j k in
+  let j∘k∼id
+    : homotopy Unit Unit j∘k (id Unit)
+    := \_ → refl
+  in
+  (j, ((k, k∘j∼id), (k, j∘k∼id)))
+
+#def ≃Unit→is-contr
+  (A : U)
+  (A≃Unit : Equiv A Unit)
+  : is-contr A
+  :=
+  let (_, ((r, r∘f∼id), _)) := A≃Unit in
+  (r unit, \a → r∘f∼id a)
+
+-- #def is-equiv→fibers-are-contr
+--   (A B : U)
+--   (f : A → B)
+--   (f-is-equiv : is-equiv A B f)
+--   (y : B)
+--   : is-contr (fib A B f y)
+--   :=
+--   let (r, (r∘f∼id, f∘r∼id)) :=
+--     is-equiv→is-qinv A B f
+--       f-is-equiv
+--   in
+--   let c : fib A B f y := (r y, f∘r∼id y) in
+--   let prf
+--     : (p : fib A B f y) → c = p
+--     := \p →
+--     let (a, fa=y) : fib A B f y := p in
+--     let ry=a
+--       : r y = a
+--       :=
+--       trans A
+--         (r y)
+--         (r (f a))
+--         a
+--         (cong B A y (f a) r (symm B (f a) y fa=y))
+--         (r∘f∼id a)
+--     in
+--     let c-path=a-path
+--       : transport
+--           A
+--           (\a → f a = y)
+--           (r y) a
+--           ry=a
+--           (f∘r∼id y)
+--         = fa=y
+--       := ?
+--     in
+--     eq-Σ
+--       A
+--       (\a → f a = y)
+--       (r y) a
+--       (f∘r∼id y)
+--       fa=y
+--       ry=a
+--       c-path=a-path
+--   in
+--   (c, prf)
+
+
+-- #def is-equiv≃fibers-are-contr
+--   (A B : U)
+--   (f : A → B)
+--   : Equiv
+--       (is-equiv A B f)
+--       ((y : B) → (is-contr (fib A B f y)))
+--   := ?

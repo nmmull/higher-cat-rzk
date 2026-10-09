@@ -1,0 +1,36 @@
+#lang rzk-1
+
+#def homotopy
+  (A B : U)
+  (f g : A → B)
+  : U
+  := (x : A) → f x = g x
+
+-- f ∼ f
+#def refl-homotopy
+  (A B : U)
+  (f : A → B)
+  : homotopy A B f f
+  := \_ → refl
+
+-- f ∼ g → g ∼ f
+#def symm-homotopy
+  (A B : U)
+  (f g : A → B)
+  (f∼g : homotopy A B f g)
+  : homotopy A B g f
+  := \a → symm B (f a) (g a) (f∼g a)
+
+#def trans-homotopy
+  (A B : U)
+  (f g h : A → B)
+  (f∼g : homotopy A B f g)
+  (g∼h : homotopy A B g h)
+  : homotopy A B f h
+  := \a →
+    trans B
+      (f a)
+      (g a)
+      (h a)
+      (f∼g a)
+      (g∼h a)

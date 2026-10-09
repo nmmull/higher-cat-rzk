@@ -1,0 +1,56 @@
+#lang rzk-1
+
+#def is-contr
+  (A : U)
+  : U
+  := Σ (c : A) , (x : A) → c = x
+
+#def is-prop
+  (A : U)
+  : U
+  := (x y : A) → x = y
+
+#def is-set
+  (A : U)
+  : U
+  := (x y : A) → is-prop (x = y)
+
+#def is-contr-Unit
+  : is-contr Unit
+  :=
+  (unit , \_ → refl)
+
+#def is-contr→is-prop
+  (A : U)
+  (A-is-contr : is-contr A)
+  : is-prop A
+  := \x y →
+  let (c, ∀x.c=x) := A-is-contr in
+  let x=c := symm A c x (∀x.c=x x) in
+  let c=y := ∀x.c=x y in
+  trans A x c y x=c c=y
+
+-- #def is-contr-is-prop
+--   (A : U)
+--   : is-prop (is-contr A)
+--   := \A-is-contr₁ A-is-contr₂ →
+--   let (c₁, ∀a.c₁=a) := A-is-contr₁ in
+--   let (c₂, ∀a.c₂=a) := A-is-contr₂ in
+--   let c₁=c₂ := ∀a.c₁=a c₂ in
+--   ?
+
+#def is-prop→inhabited→is-contr
+  (A : U)
+  (A-is-prop : is-prop A)
+  (a : A)
+  : is-contr A
+  := (a, \x → A-is-prop a x)
+
+#def ⟨inhabited→is-contr⟩→is-prop
+  (A : U)
+  (inhabited→A-is-contr : A → is-contr A)
+  : is-prop A
+  := \x y →
+  is-contr→is-prop A
+    (inhabited→A-is-contr x)
+    x y

@@ -1,0 +1,8 @@
+include:
+  - basic.rzk
+  - equality.rzk
+  - homotopy.rzk
+  - n-types.rzk
+  - equiv.rzk
+  - eckmann-hilton.rzk
+  - category-theory.rzk

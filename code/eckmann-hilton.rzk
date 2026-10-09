@@ -1,122 +1,5 @@
 #lang rzk-1
 
-#def symm
-  (A : U)
-  (x y : A)
-  (x=y : x = y)
-  : y = x
-  :=
-  idJ
-    (A
-    , x
-    , \z _ → z = x
-    , refl
-    , y
-    , x=y
-    )
-
-#def trans
-  (A : U)
-  (x y z : A)
-  (x=y : x = y)
-  (y=z : y = z)
-  : x = z
-  :=
-  idJ
-    ( A
-    , y
-    , \w _ → x = w
-    , x=y
-    , z
-    , y=z
-    )
-
-#def trans²
-  (A : U)
-  (a b c d : A)
-  (p : a = b)
-  (q : b = c)
-  (r : c = d)
-  : a = d
-  := trans A a c d (trans A a b c p q) r
-
-#def lu
-  (A : U)
-  (x y : A)
-  (p : x = y)
-  : p = trans A x x y refl p
-  :=
-  idJ
-    ( A
-    , x
-    , \z q → q = trans A x x z refl q
-    , refl
-    , y
-    , p
-    )
-
-#def ru
-  (A : U)
-  (x y : A)
-  (p : x = y)
-  : p = trans A x y y p refl
-  :=
-  idJ
-    ( A
-    , x
-    , \z q → q = trans A x z z q refl
-    , refl
-    , y
-    , p
-    )
-
-#def symm-symm
-  (A : U)
-  (x y : A)
-  (p : x = y)
-  : symm A y x (symm A x y p) = p
-  :=
-  idJ
-    ( A
-    , x
-    , \z q → symm A z x (symm A x z q) = q
-    , refl
-    , y
-    , p
-    )
-
-
-#def idJ²
-  (A : U)
-  (b : A)
-  (D : (x : A) → (p : x = b) → U)
-  (d : D b refl)
-  (x : A)
-  (p : x = b)
-  : D x p
-  :=
-  let
-    d-symm-symm
-    : D x (symm A b x (symm A x b p))
-    :=
-    idJ
-      ( A
-      , b
-      , \z q → D z (symm A b z q)
-      , d
-      , x
-      , symm A x b p
-      )
-  in
-  idJ
-    ( x = b
-    , symm A b x (symm A x b p)
-    , \q _ → D x q
-    , d-symm-symm
-    , p
-    , symm-symm A x b p
-    )
-
 #def Ω
   (A : U)
   (a : A)
@@ -135,13 +18,13 @@
   (p q : a = b)
   (α : p = q)
   (r : b = c)
-  : trans A a b c p r = trans A a b c q r
   -- p ■ r = q ■ r
+  : trans A a b c p r = trans A a b c q r
   :=
   let ■ := trans A a b b in
   let eq1
     : ■ p refl = p
-    := symm (a = b) p (■ p refl) (ru A a b p)
+    := symm (a = b) p (■ p refl) (right-unit A a b p)
   in
   let eq2
     : p = q
@@ -149,7 +32,7 @@
   in
   let eq3
     : q = ■ q refl
-    := ru A a b q
+    := right-unit A a b q
   in
   let p■refl=q■refl
     : ■ p refl = ■ q refl
@@ -174,12 +57,13 @@
   (r s : b = c)
   (p : a = b)
   (β : r = s)
+  -- p ■ r = p ■ s
   : trans A a b c p r = trans A a b c p s
   :=
   let ■ := trans A b b c in
   let eq1
     : ■ refl r = r
-    := symm (b = c) r (■ refl r) (lu A b c r)
+    := symm (b = c) r (■ refl r) (left-unit A b c r)
   in
   let eq2
     : r = s
@@ -187,7 +71,7 @@
   in
   let eq3
     : s = ■ refl s
-    := lu A b c s
+    := left-unit A b c s
   in
   let refl■r=refl■s :=
     trans²
@@ -195,7 +79,7 @@
       (■ refl r) r s (■ refl s)
       eq1 eq2 eq3
   in
-  idJ²
+  idJ₂
     A
     b
     (\z t → trans A z b c t r = trans A z b c t s)
@@ -257,7 +141,7 @@
       (Ω² A a)
       p
       (■ refl p)
-      (lu (Ω A a) refl refl p)
+      (left-unit (Ω A a) refl refl p)
   in
   let ⟨refl■α⟩■⟨refl■β⟩=α■⟨refl■β⟩
     : ■ (■ refl α) (■ refl β) = ■ α (■ refl β)
@@ -305,7 +189,7 @@
       (Ω² A a)
       p
       (■ refl p)
-      (lu (Ω A a) refl refl p)
+      (left-unit (Ω A a) refl refl p)
   in
   let ⟨refl■β⟩■⟨refl■α⟩=β■⟨refl■β⟩
     : ■ (■ refl β) (■ refl α) = ■ β (■ refl α)
